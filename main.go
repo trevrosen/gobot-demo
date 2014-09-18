@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hybridgroup/gobot"
 	"github.com/hybridgroup/gobot/platforms/beaglebone"
 	"github.com/hybridgroup/gobot/platforms/gpio"
 )
@@ -19,6 +20,8 @@ func main() {
 	time.Sleep(2000 * time.Millisecond)
 	fmt.Println("[+] Relay going LOW")
 	setDirectPin(OFF)
+
+	blinkLedOverAndOver()
 }
 
 
@@ -39,8 +42,27 @@ func setDirectPin(state int){
 
 // Demos the Gobot Every function, which provides a way
 // to trigger recurring functionality.
-func blinkLEDmanually(){
+func blinkLedOverAndOver(){
+	gbot := gobot.NewGobot()
 
+	beagleboneAdaptor := beaglebone.NewBeagleboneAdaptor("beaglebone")
+	led								:= gpio.NewLedDriver(beagleboneAdaptor, "led", "P9_15")
+
+	work := func() {
+		gobot.Every(1 * time.Second, func() {
+			led.Toggle()
+		})
+	}
+
+	robot := gobot.NewRobot("blinkBot",
+		[]gobot.Connection{beagleboneAdaptor},
+		[]gobot.Device{led},
+		work,
+	)
+
+	gbot.AddRobot(robot)
+
+	gbot.Start()
 }
 
 
